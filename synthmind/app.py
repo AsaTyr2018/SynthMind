@@ -1,11 +1,11 @@
 import gradio as gr
 import socket
-import ollama
 import json
 from pathlib import Path
 
 PERSONA_DIR = Path(__file__).resolve().parent.parent / "persona"
 PERSONA_DIR.mkdir(exist_ok=True)
+LLM_MODELS_DIR = Path(__file__).resolve().parent.parent / "models" / "llm"
 
 
 def list_personas():
@@ -72,30 +72,22 @@ def update_persona_list():
     return "\n".join(f"- {n}" for n in names)
 
 
-# LLM integration with Ollama
+# LLM model handling
 def list_llm_models():
-    try:
-        return [m["name"] for m in ollama.list().get("models", [])]
-    except Exception:
+    """Return available LLM models from the local models directory."""
+    if not LLM_MODELS_DIR.exists():
         return []
-
-def download_llm_model(name):
-    try:
-        ollama.pull(name)
-        return f"Downloaded {name}"
-    except Exception as e:
-        return f"Error: {e}"
+    models = []
+    for p in LLM_MODELS_DIR.iterdir():
+        if p.is_file():
+            models.append(p.stem)
+        elif p.is_dir():
+            models.append(p.name)
+    return sorted(models)
 
 def generate_response(user_input, history, model):
-    messages = [{"role": "user", "content": user_input}]
-    for u, b in history:
-        messages.insert(0, {"role": "assistant", "content": b})
-        messages.insert(0, {"role": "user", "content": u})
-    try:
-        resp = ollama.chat(model=model, messages=messages)
-        return resp["message"]["content"]
-    except Exception as e:
-        return f"Error: {e}"
+    """Placeholder text generation until an LLM backend is integrated."""
+    return "[LLM backend not implemented]"
 
 
 
@@ -254,11 +246,7 @@ with gr.Blocks(theme=theme) as demo:
         gr.Markdown("## Model Selection")
         model_dropdown = gr.Dropdown(list_llm_models(), label="Available LLM Models")
         refresh_models_btn = gr.Button("Refresh")
-        download_box = gr.Textbox(label="Model to download")
-        download_btn = gr.Button("Download")
-        download_msg = gr.Markdown()
         refresh_models_btn.click(lambda: gr.update(choices=list_llm_models()), None, model_dropdown)
-        download_btn.click(lambda name: (download_llm_model(name), gr.update(choices=list_llm_models())), download_box, [download_msg, model_dropdown])
     send_btn.click(
         lambda msg, history, model: (history + [(msg, generate_response(msg, history, model))], ""),
         [chat_input, chatbot, model_dropdown],

@@ -17,7 +17,7 @@ Module im Detail:
 
 1. Text-LLM:
 Modell: Mistral-7B-Instruct (GGUF-Format, quantisiert)
-Backend: llama.cpp oder ollama
+Backend: llama.cpp
 Ausführung: CPU oder GPU (abhängig von Systemlast)
 Ziel: Durchführung natürlicher Textdialoge und Prompt-Interpretation
 
