@@ -160,6 +160,9 @@ def get_local_ip() -> str:
 theme = gr.themes.Soft(primary_hue="orange")
 
 with gr.Blocks(theme=theme) as demo:
+    # Register persona_state so Gradio tracks it properly.
+    persona_state.render()
+
     gr.Markdown("# SynthMind")
     with gr.Tab("Chat"):
         with gr.Column():
