@@ -1,5 +1,74 @@
 import gradio as gr
 import socket
+import json
+from pathlib import Path
+
+PERSONA_DIR = Path(__file__).resolve().parent.parent / "persona"
+PERSONA_DIR.mkdir(exist_ok=True)
+
+
+def list_personas():
+    """Return a list of available persona names."""
+    return sorted([p.stem for p in PERSONA_DIR.glob("*.json")])
+
+
+def load_persona(name):
+    """Load a persona JSON file."""
+    path = PERSONA_DIR / f"{name}.json"
+    if not path.exists():
+        return "", "", "", "", "", ""
+    with path.open() as f:
+        data = json.load(f)
+    dialogs = data.get("dialog_examples", [])
+    dialogs += ["", "", ""]
+    return (
+        data.get("name", name),
+        data.get("background", ""),
+        data.get("character", ""),
+        dialogs[0],
+        dialogs[1],
+        dialogs[2],
+    )
+
+
+def save_persona(name, background, character, d1, d2, d3):
+    """Save persona data to a JSON file."""
+    if not name:
+        return gr.update(), update_persona_list()
+    data = {
+        "name": name,
+        "background": background,
+        "character": character,
+        "dialog_examples": [d for d in [d1, d2, d3] if d.strip()],
+    }
+    path = PERSONA_DIR / f"{name}.json"
+    with path.open("w") as f:
+        json.dump(data, f, indent=2)
+    return gr.update(choices=list_personas(), value=name), update_persona_list()
+
+
+def delete_persona(name):
+    """Remove persona JSON file."""
+    path = PERSONA_DIR / f"{name}.json"
+    if path.exists():
+        path.unlink()
+    return (
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        gr.update(choices=list_personas(), value=None),
+        update_persona_list(),
+    )
+
+
+def update_persona_list():
+    names = list_personas()
+    if not names:
+        return "No personas found."
+    return "\n".join(f"- {n}" for n in names)
 
 
 def generate_response(user_input, history):
@@ -44,9 +113,48 @@ with gr.Blocks(theme=theme) as demo:
             chat_input.render()
             send_btn.render()
     with gr.Tab("Personas"):
-        gr.Markdown("## Personas")
-        gr.Dropdown(["Default", "Friendly", "Professional"], label="Select Persona")
-        gr.Markdown("(Persona profiles coming soon)")
+        gr.Markdown("## Personas Editor")
+        persona_select = gr.Dropdown(list_personas(), label="Select Persona")
+        persona_list_md = gr.Markdown(update_persona_list())
+        name_box = gr.Textbox(label="Name")
+        background_box = gr.Textbox(label="Background", lines=3)
+        character_box = gr.Textbox(label="Character", lines=3)
+        dialog1 = gr.Textbox(label="Example Dialog 1", lines=1)
+        dialog2 = gr.Textbox(label="Example Dialog 2", lines=1)
+        dialog3 = gr.Textbox(label="Example Dialog 3", lines=1)
+        with gr.Row():
+            save_btn = gr.Button("Save Persona")
+            delete_btn = gr.Button("Delete Persona")
+
+        def load_selected(name):
+            return load_persona(name)
+
+        persona_select.change(
+            load_selected,
+            persona_select,
+            [name_box, background_box, character_box, dialog1, dialog2, dialog3],
+        )
+
+        save_btn.click(
+            save_persona,
+            [name_box, background_box, character_box, dialog1, dialog2, dialog3],
+            [persona_select, persona_list_md],
+        )
+
+        delete_btn.click(
+            delete_persona,
+            persona_select,
+            [
+                name_box,
+                background_box,
+                character_box,
+                dialog1,
+                dialog2,
+                dialog3,
+                persona_select,
+                persona_list_md,
+            ],
+        )
     with gr.Tab("App Settings"):
         gr.Markdown("## Settings")
         gr.Slider(minimum=0, maximum=1, value=0.7, label="Temperature")
