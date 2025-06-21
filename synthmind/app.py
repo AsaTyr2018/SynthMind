@@ -157,8 +157,77 @@ with gr.Blocks(theme=theme) as demo:
         )
     with gr.Tab("App Settings"):
         gr.Markdown("## Settings")
-        gr.Slider(minimum=0, maximum=1, value=0.7, label="Temperature")
-        gr.Markdown("(Additional settings will be available)")
+        gr.Slider(
+            minimum=0,
+            maximum=1.5,
+            value=0.7,
+            label="temperature",
+            info="what does this settings do",
+        )
+        gr.Slider(
+            minimum=0,
+            maximum=1,
+            value=0.9,
+            label="top_p",
+            info="what does this settings do",
+        )
+        gr.Slider(
+            minimum=1,
+            maximum=100,
+            step=1,
+            value=50,
+            label="top_k",
+            info="what does this settings do",
+        )
+        gr.Slider(
+            minimum=1,
+            maximum=512,
+            step=1,
+            value=256,
+            label="max_tokens",
+            info="what does this settings do",
+        )
+        gr.Slider(
+            minimum=0.5,
+            maximum=2.0,
+            value=1.1,
+            label="repetition_penalty",
+            info="what does this settings do",
+        )
+        gr.Slider(
+            minimum=0,
+            maximum=1,
+            value=0.6,
+            label="presence_penalty",
+            info="what does this settings do",
+        )
+        gr.Slider(
+            minimum=0,
+            maximum=1,
+            value=0.5,
+            label="frequency_penalty",
+            info="what does this settings do",
+        )
+        gr.Textbox(
+            value='["\n", "###"]',
+            label="stop",
+            info="what does this settings do",
+        )
+        gr.Number(
+            value=None,
+            label="logprobs",
+            info="what does this settings do",
+        )
+        gr.Checkbox(
+            value=False,
+            label="echo",
+            info="what does this settings do",
+        )
+        gr.Number(
+            value=None,
+            label="seed",
+            info="what does this settings do",
+        )
     with gr.Tab("Model Selection"):
         gr.Markdown("## Model Selection")
         with gr.Row():
