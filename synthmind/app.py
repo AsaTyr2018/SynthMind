@@ -49,7 +49,13 @@ def save_persona(name, background, character, d1, d2, d3):
     path = PERSONA_DIR / f"{name}.json"
     with path.open("w") as f:
         json.dump(data, f, indent=2)
-    return gr.update(choices=list_personas(), value=name), update_persona_list()
+    choices = list_personas()
+    return (
+        gr.update(choices=choices, value=name),
+        update_persona_list(),
+        gr.update(choices=choices, value=name),
+        name,
+    )
 
 
 def delete_persona(name):
@@ -57,6 +63,7 @@ def delete_persona(name):
     path = PERSONA_DIR / f"{name}.json"
     if path.exists():
         path.unlink()
+    choices = list_personas()
     return (
         "",
         "",
@@ -64,8 +71,10 @@ def delete_persona(name):
         "",
         "",
         "",
-        gr.update(choices=list_personas(), value=None),
+        gr.update(choices=choices, value=None),
         update_persona_list(),
+        gr.update(choices=choices, value=None),
+        None,
     )
 
 
@@ -74,6 +83,26 @@ def update_persona_list():
     if not names:
         return "No personas found."
     return "\n".join(f"- {n}" for n in names)
+
+
+def get_persona_prompt(name: str) -> str:
+    """Return a short prompt string for ``name``."""
+    if not name:
+        return ""
+    path = PERSONA_DIR / f"{name}.json"
+    if not path.exists():
+        return ""
+    with path.open() as f:
+        data = json.load(f)
+    parts = []
+    if data.get("background"):
+        parts.append(f"Background: {data['background']}")
+    if data.get("character"):
+        parts.append(f"Character: {data['character']}")
+    examples = data.get("dialog_examples", [])[:2]
+    for ex in examples:
+        parts.append(ex)
+    return "\n".join(parts)
 
 
 # LLM model handling
@@ -90,11 +119,12 @@ def list_llm_models():
     return sorted(models)
 
 
-
 # Chat interface elements
 chatbot = gr.Chatbot()
 chat_input = gr.Textbox(placeholder="Type a message...", scale=8, lines=1)
 image_input = gr.Image(type="pil", visible=False)
+persona_state = gr.State(value=None)
+chat_persona_select = gr.Dropdown(list_personas(), label="Persona", value=None)
 mode_select = gr.Radio([
     "Chat",
     "Generate Image",
@@ -104,6 +134,7 @@ mode_select = gr.Radio([
     label="Mode",
 )
 send_btn = gr.Button("Send", scale=1)
+
 
 # Determine local network IP address for the Gradio server
 def get_local_ip() -> str:
@@ -119,6 +150,7 @@ def get_local_ip() -> str:
         s.close()
     return ip
 
+
 theme = gr.themes.Soft(primary_hue="orange")
 
 with gr.Blocks(theme=theme) as demo:
@@ -130,6 +162,7 @@ with gr.Blocks(theme=theme) as demo:
             chat_input.render()
             send_btn.render()
         with gr.Row():
+            chat_persona_select.render()
             mode_select.render()
             image_input.render()
     with gr.Tab("Personas"):
@@ -147,18 +180,40 @@ with gr.Blocks(theme=theme) as demo:
             delete_btn = gr.Button("Delete Persona")
 
         def load_selected(name):
-            return load_persona(name)
+            data = load_persona(name)
+            return (*data, name, gr.update(value=name))
 
         persona_select.change(
             load_selected,
             persona_select,
-            [name_box, background_box, character_box, dialog1, dialog2, dialog3],
+            [
+                name_box,
+                background_box,
+                character_box,
+                dialog1,
+                dialog2,
+                dialog3,
+                persona_state,
+                chat_persona_select,
+            ],
         )
 
         save_btn.click(
             save_persona,
-            [name_box, background_box, character_box, dialog1, dialog2, dialog3],
-            [persona_select, persona_list_md],
+            [
+                name_box,
+                background_box,
+                character_box,
+                dialog1,
+                dialog2,
+                dialog3,
+            ],
+            [
+                persona_select,
+                persona_list_md,
+                chat_persona_select,
+                persona_state,
+            ],
         )
 
         delete_btn.click(
@@ -173,6 +228,8 @@ with gr.Blocks(theme=theme) as demo:
                 dialog3,
                 persona_select,
                 persona_list_md,
+                chat_persona_select,
+                persona_state,
             ],
         )
     with gr.Tab("App Settings"):
@@ -250,31 +307,60 @@ with gr.Blocks(theme=theme) as demo:
         )
     with gr.Tab("Model Selection"):
         gr.Markdown("## Model Selection")
-        model_dropdown = gr.Dropdown(list_llm_models(), label="Available LLM Models")
+        model_dropdown = gr.Dropdown(
+            list_llm_models(),
+            label="Available LLM Models",
+        )
         refresh_models_btn = gr.Button("Refresh")
-        refresh_models_btn.click(lambda: gr.update(choices=list_llm_models()), None, model_dropdown)
-    def process_message(msg, history, mode, image, model):
+        refresh_models_btn.click(
+            lambda: gr.update(choices=list_llm_models()),
+            None,
+            model_dropdown,
+        )
+
+    def process_message(msg, history, mode, image, model, persona_name):
         if mode == "Generate Image":
             img = generate_image(msg)
             return history + [(msg, img)], "", None
         if mode == "Analyze Image":
             if image is None:
-                return history + [(msg, "Please upload an image." )], "", None
+                return history + [(msg, "Please upload an image.")], "", None
             analysis = analyze_image(image)
             return history + [(image, analysis)], "", None
         # default Chat mode
-        response = generate_response(msg, history, model)
+        persona_prompt = get_persona_prompt(persona_name)
+        response = generate_response(msg, history, model, persona_prompt)
         return history + [(msg, response)], "", None
 
     send_btn.click(
         process_message,
-        [chat_input, chatbot, mode_select, image_input, model_dropdown],
-        [chatbot, chat_input, image_input]
+        [
+            chat_input,
+            chatbot,
+            mode_select,
+            image_input,
+            model_dropdown,
+            persona_state,
+        ],
+        [chatbot, chat_input, image_input],
     )
     chat_input.submit(
         process_message,
-        [chat_input, chatbot, mode_select, image_input, model_dropdown],
-        [chatbot, chat_input, image_input]
+        [
+            chat_input,
+            chatbot,
+            mode_select,
+            image_input,
+            model_dropdown,
+            persona_state,
+        ],
+        [chatbot, chat_input, image_input],
+    )
+
+    chat_persona_select.change(
+        lambda x: x,
+        chat_persona_select,
+        persona_state,
     )
 
     def toggle_image_input(mode):

@@ -82,7 +82,10 @@ def get_vision_model(repo_id: str, device: str | None = None) -> Any:
     return _LOADED_VISION[repo_id]
 
 
-def get_image_generator(repo_id: str, device: str | None = None) -> StableDiffusionPipeline:
+def get_image_generator(
+    repo_id: str,
+    device: str | None = None,
+) -> StableDiffusionPipeline:
     """Return a Stable Diffusion pipeline for ``repo_id``.
 
     The pipeline is downloaded on first use and then reused.
