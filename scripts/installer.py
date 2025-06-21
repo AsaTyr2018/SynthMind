@@ -31,7 +31,7 @@ def create_venv(target_dir: Path):
         run(f"{sys.executable} -m venv {venv_dir}")
     pip = venv_bin(venv_dir, "pip")
     run(f"{pip} install --upgrade pip")
-    run(f"{pip} install gradio")
+    run(f"{pip} install gradio transformers diffusers huggingface_hub")
 
 
 def get_default_dir() -> Path:

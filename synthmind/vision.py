@@ -1,17 +1,28 @@
-"""Placeholder vision module for SynthMind."""
+"""Vision module for SynthMind.
+
+Uses models loaded via :mod:`synthmind.models` to analyse uploaded images.
+The required weights are downloaded automatically on first run and cached
+under ``models/vision``.
+"""
 
 from PIL import Image
 
+from .models import get_vision_model
 
-def analyze_image(image: Image.Image) -> str:
-    """Return a simple description of the uploaded image.
+DEFAULT_VISION_MODEL = "google/vit-base-patch16-224"
 
-    Parameters
-    ----------
-    image: PIL.Image.Image
-        Image to analyze.
-    """
+
+def analyze_image(image: Image.Image, model: str | None = None) -> str:
+    """Analyse an image and return a description."""
+
     if image is None:
         return "No image provided."
-    width, height = image.size
-    return f"Received an image of size {width}x{height}px"
+
+    repo_id = model or DEFAULT_VISION_MODEL
+    processor, vision_model = get_vision_model(repo_id)
+    inputs = processor(images=image, return_tensors="pt")
+    outputs = vision_model(**inputs)
+    logits = outputs.logits.detach()
+    predicted = logits.argmax(-1).item()
+    label = vision_model.config.id2label.get(predicted, str(predicted))
+    return f"Detected: {label}"
