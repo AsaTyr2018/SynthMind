@@ -8,19 +8,21 @@ SynthMind is a multimodal chat application that combines a large language model 
 - Local LLM model listing from the `models/llm` directory
 - Image generation and image analysis modes in the chat window
 - Automatic model download and loading for the LLM, Stable Diffusion and vision models
-- Simple setup script to create a virtual environment and install dependencies
+- Installer script to create a virtual environment and manage system-wide installations
 
 ## Getting Started
 
-For a quick local setup you can still use `scripts/setup.sh` to create a virtual environment in the
-current repository and install the required Python packages (`gradio`, `transformers`, `diffusers`, and `huggingface_hub`). To manage a system wide installation
-use the new `scripts/installer.py` script which supports `install`, `update` and `uninstall`
-commands. By default the installer places SynthMind in `/opt/SynthMind` on Linux and in a
-`SynthMind` directory inside your home folder on Windows.
+For quick setup run the installer:
+
+```bash
+python scripts/install.py install
+```
+
+By default the installer places SynthMind in /opt/SynthMind on Linux or prompts for a location on Windows. Use `python scripts/install.py update` to upgrade and `python scripts/install.py uninstall` to remove the application.
 
 ### Local run
 
-Run `scripts/setup.sh` and then launch the application:
+After installation or when running from a cloned repository activate the virtual environment and launch:
 
 ```bash
 source venv/bin/activate
@@ -31,10 +33,10 @@ This will open a Gradio interface in your web browser.
 
 ### System-wide installation
 
-The `scripts/installer.py` helper can clone the repository, set up a virtual environment and update or remove the installation:
+Use the installer for management:
 
 ```bash
-python scripts/installer.py install --repo <git_url>
-python scripts/installer.py update
-python scripts/installer.py uninstall
+python scripts/install.py install
+python scripts/install.py update
+python scripts/install.py uninstall
 ```
