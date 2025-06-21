@@ -1,11 +1,16 @@
 import gradio as gr
 import socket
 import ollama
+import os
 import json
 from pathlib import Path
 
 PERSONA_DIR = Path(__file__).resolve().parent.parent / "persona"
 PERSONA_DIR.mkdir(exist_ok=True)
+
+# Ollama connection settings
+OLLAMA_HOST = os.getenv("OLLAMA_HOST")
+ollama_client = ollama.Client(host=OLLAMA_HOST)
 
 
 def list_personas():
@@ -75,13 +80,13 @@ def update_persona_list():
 # LLM integration with Ollama
 def list_llm_models():
     try:
-        return [m["name"] for m in ollama.list().get("models", [])]
+        return [m.model for m in ollama_client.list().models if m.model]
     except Exception:
         return []
 
 def download_llm_model(name):
     try:
-        ollama.pull(name)
+        ollama_client.pull(name)
         return f"Downloaded {name}"
     except Exception as e:
         return f"Error: {e}"
@@ -92,7 +97,7 @@ def generate_response(user_input, history, model):
         messages.insert(0, {"role": "assistant", "content": b})
         messages.insert(0, {"role": "user", "content": u})
     try:
-        resp = ollama.chat(model=model, messages=messages)
+        resp = ollama_client.chat(model=model, messages=messages)
         return resp["message"]["content"]
     except Exception as e:
         return f"Error: {e}"

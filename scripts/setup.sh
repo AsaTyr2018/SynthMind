@@ -10,6 +10,6 @@ python3 -m venv "$VENV_DIR"
 source "$VENV_DIR/bin/activate"
 
 pip install --upgrade pip
-pip install gradio
+pip install gradio ollama
 
 echo "Setup complete. Activate the virtual environment using: source $VENV_DIR/bin/activate"
