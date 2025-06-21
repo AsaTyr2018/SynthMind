@@ -1,0 +1,7 @@
+numpy<2
+pillow
+transformers
+huggingface_hub
+diffusers
+gradio
+torch

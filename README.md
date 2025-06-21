@@ -43,16 +43,13 @@ bash scripts/install.sh uninstall
 
 ### Requirements
 
-SynthMind relies on the PyTorch library for its chat model. When installing
-manually make sure PyTorch and numpy are available before the other
-dependencies:
+SynthMind relies on the PyTorch library for its chat model. Install all
+dependencies using the provided `requirements.txt` file:
 
 ```bash
 pip install --upgrade pip
-pip install 'numpy<2'
-pip install torch --index-url https://download.pytorch.org/whl/cpu
-pip install gradio transformers diffusers huggingface_hub
+pip install --extra-index-url https://download.pytorch.org/whl/cpu -r requirements.txt
 ```
 
-The `install.sh` script performs these steps automatically when creating the
+The `install.sh` script performs this step automatically when creating the
 virtual environment.
