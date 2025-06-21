@@ -38,6 +38,9 @@ create_venv() {
     local pip
     pip=$(venv_bin "$venv" pip)
     run "\"$pip\" install --upgrade pip"
+    # Install PyTorch and numpy explicitly to ensure the LLM backend works
+    run "\"$pip\" install 'numpy<2'"
+    run "\"$pip\" install torch --index-url https://download.pytorch.org/whl/cpu"
     run "\"$pip\" install gradio transformers diffusers huggingface_hub"
 }
 
