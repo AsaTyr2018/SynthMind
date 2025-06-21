@@ -16,6 +16,7 @@ def generate_response(
     user_input: str,
     history: List[Tuple[str, str]] | None = None,
     model: Optional[str] = None,
+    persona: str | None = None,
 ) -> str:
     """Generate a response using the selected LLM.
 
@@ -25,6 +26,17 @@ def generate_response(
     repo_id = model or DEFAULT_LLM
     tokenizer, llm = get_llm(repo_id)
 
-    inputs = tokenizer(user_input, return_tensors="pt")
+    history = history or []
+    context = ""
+    for h in history[-2:]:
+        context += f"User: {h[0]}\nAssistant: {h[1]}\n"
+    prompt_parts = []
+    if persona:
+        prompt_parts.append(persona)
+    if context:
+        prompt_parts.append(context)
+    prompt_parts.append(f"User: {user_input}\nAssistant:")
+    prompt = "\n".join(prompt_parts)
+    inputs = tokenizer(prompt, return_tensors="pt")
     outputs = llm.generate(**inputs, max_new_tokens=50)
     return tokenizer.decode(outputs[0], skip_special_tokens=True)
