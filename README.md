@@ -15,10 +15,10 @@ SynthMind is a multimodal chat application that combines a large language model 
 For quick setup run the installer:
 
 ```bash
-python scripts/install.py install
+bash scripts/install.sh install
 ```
 
-By default the installer places SynthMind in /opt/SynthMind on Linux or prompts for a location on Windows. Use `python scripts/install.py update` to upgrade and `python scripts/install.py uninstall` to remove the application.
+By default the installer places SynthMind in /opt/SynthMind on Linux or prompts for a location on Windows. Use `bash scripts/install.sh update` to upgrade and `bash scripts/install.sh uninstall` to remove the application.
 
 ### Local run
 
@@ -36,7 +36,7 @@ This will open a Gradio interface in your web browser.
 Use the installer for management:
 
 ```bash
-python scripts/install.py install
-python scripts/install.py update
-python scripts/install.py uninstall
+bash scripts/install.sh install
+bash scripts/install.sh update
+bash scripts/install.sh uninstall
 ```
