@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-REPO_URL="https://github.com/yourusername/SynthMind.git"
+REPO_URL="https://github.com/AsaTyr2018/SynthMind.git"
 DEFAULT_INSTALL_DIR_LINUX="/opt/SynthMind"
 
 run() {
