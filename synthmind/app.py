@@ -1,5 +1,6 @@
 import gradio as gr
 import socket
+import ollama
 import json
 from pathlib import Path
 
@@ -71,10 +72,31 @@ def update_persona_list():
     return "\n".join(f"- {n}" for n in names)
 
 
-def generate_response(user_input, history):
-    """Placeholder text generation function."""
-    # TODO: integrate LLM here
-    return "This is a placeholder response."
+# LLM integration with Ollama
+def list_llm_models():
+    try:
+        return [m["name"] for m in ollama.list().get("models", [])]
+    except Exception:
+        return []
+
+def download_llm_model(name):
+    try:
+        ollama.pull(name)
+        return f"Downloaded {name}"
+    except Exception as e:
+        return f"Error: {e}"
+
+def generate_response(user_input, history, model):
+    messages = [{"role": "user", "content": user_input}]
+    for u, b in history:
+        messages.insert(0, {"role": "assistant", "content": b})
+        messages.insert(0, {"role": "user", "content": u})
+    try:
+        resp = ollama.chat(model=model, messages=messages)
+        return resp["message"]["content"]
+    except Exception as e:
+        return f"Error: {e}"
+
 
 
 def generate_image(prompt):
@@ -230,18 +252,21 @@ with gr.Blocks(theme=theme) as demo:
         )
     with gr.Tab("Model Selection"):
         gr.Markdown("## Model Selection")
-        with gr.Row():
-            gr.Column()
-            gr.Column()
-        gr.Markdown("(Model selection placeholder)")
+        model_dropdown = gr.Dropdown(list_llm_models(), label="Available LLM Models")
+        refresh_models_btn = gr.Button("Refresh")
+        download_box = gr.Textbox(label="Model to download")
+        download_btn = gr.Button("Download")
+        download_msg = gr.Markdown()
+        refresh_models_btn.click(lambda: gr.update(choices=list_llm_models()), None, model_dropdown)
+        download_btn.click(lambda name: (download_llm_model(name), gr.update(choices=list_llm_models())), download_box, [download_msg, model_dropdown])
     send_btn.click(
-        lambda msg, history: (history + [(msg, generate_response(msg, history))], ""),
-        [chat_input, chatbot],
+        lambda msg, history, model: (history + [(msg, generate_response(msg, history, model))], ""),
+        [chat_input, chatbot, model_dropdown],
         [chatbot, chat_input]
     )
     chat_input.submit(
-        lambda msg, history: (history + [(msg, generate_response(msg, history))], ""),
-        [chat_input, chatbot],
+        lambda msg, history, model: (history + [(msg, generate_response(msg, history, model))], ""),
+        [chat_input, chatbot, model_dropdown],
         [chatbot, chat_input]
     )
 

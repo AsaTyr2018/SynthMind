@@ -5,12 +5,15 @@ SynthMind is a multimodal chat application that combines a large language model 
 ## Features
 
 - Chat interface with tabs for Chat, Personas, App Settings, and Model Selection
-- Placeholder LLM and Stable Diffusion calls
+- Ollama-backed LLM integration with model downloader
+- Placeholder Stable Diffusion calls
 - Simple setup script to create a virtual environment and install dependencies
 
 ## Getting Started
 
-Run `scripts/setup.sh` to create a virtual environment and install the required Python packages. Then launch the application:
+Run `scripts/setup.sh` to create a virtual environment and install the required Python packages.
+Make sure an Ollama server is running locally to provide LLM completions.
+Then launch the application:
 
 ```bash
 source venv/bin/activate
