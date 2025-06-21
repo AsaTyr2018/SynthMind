@@ -3,6 +3,10 @@ import socket
 import json
 from pathlib import Path
 
+from .chat import generate_response
+from .generator import generate_image
+from .vision import analyze_image
+
 PERSONA_DIR = Path(__file__).resolve().parent.parent / "persona"
 PERSONA_DIR.mkdir(exist_ok=True)
 LLM_MODELS_DIR = Path(__file__).resolve().parent.parent / "models" / "llm"
@@ -85,21 +89,20 @@ def list_llm_models():
             models.append(p.name)
     return sorted(models)
 
-def generate_response(user_input, history, model):
-    """Placeholder text generation until an LLM backend is integrated."""
-    return "[LLM backend not implemented]"
-
-
-
-def generate_image(prompt):
-    """Placeholder image generation function."""
-    # TODO: integrate Stable Diffusion here
-    return None
 
 
 # Chat interface elements
 chatbot = gr.Chatbot()
 chat_input = gr.Textbox(placeholder="Type a message...", scale=8, lines=1)
+image_input = gr.Image(type="pil", visible=False)
+mode_select = gr.Radio([
+    "Chat",
+    "Generate Image",
+    "Analyze Image",
+],
+    value="Chat",
+    label="Mode",
+)
 send_btn = gr.Button("Send", scale=1)
 
 # Determine local network IP address for the Gradio server
@@ -126,6 +129,9 @@ with gr.Blocks(theme=theme) as demo:
         with gr.Row():
             chat_input.render()
             send_btn.render()
+        with gr.Row():
+            mode_select.render()
+            image_input.render()
     with gr.Tab("Personas"):
         gr.Markdown("## Personas Editor")
         persona_select = gr.Dropdown(list_personas(), label="Select Persona")
@@ -247,15 +253,33 @@ with gr.Blocks(theme=theme) as demo:
         model_dropdown = gr.Dropdown(list_llm_models(), label="Available LLM Models")
         refresh_models_btn = gr.Button("Refresh")
         refresh_models_btn.click(lambda: gr.update(choices=list_llm_models()), None, model_dropdown)
+    def process_message(msg, history, mode, image, model):
+        if mode == "Generate Image":
+            img = generate_image(msg)
+            return history + [(msg, img)], "", None
+        if mode == "Analyze Image":
+            if image is None:
+                return history + [(msg, "Please upload an image." )], "", None
+            analysis = analyze_image(image)
+            return history + [(image, analysis)], "", None
+        # default Chat mode
+        response = generate_response(msg, history, model)
+        return history + [(msg, response)], "", None
+
     send_btn.click(
-        lambda msg, history, model: (history + [(msg, generate_response(msg, history, model))], ""),
-        [chat_input, chatbot, model_dropdown],
-        [chatbot, chat_input]
+        process_message,
+        [chat_input, chatbot, mode_select, image_input, model_dropdown],
+        [chatbot, chat_input, image_input]
     )
     chat_input.submit(
-        lambda msg, history, model: (history + [(msg, generate_response(msg, history, model))], ""),
-        [chat_input, chatbot, model_dropdown],
-        [chatbot, chat_input]
+        process_message,
+        [chat_input, chatbot, mode_select, image_input, model_dropdown],
+        [chatbot, chat_input, image_input]
     )
+
+    def toggle_image_input(mode):
+        return gr.update(visible=mode == "Analyze Image")
+
+    mode_select.change(toggle_image_input, mode_select, image_input)
 
 demo.launch(server_name=get_local_ip())

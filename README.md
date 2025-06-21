@@ -1,12 +1,13 @@
 # SynthMind
 
-SynthMind is a multimodal chat application that combines a large language model (LLM) with a Stable Diffusion model. The interface is built with Gradio and styled like a chat application. The project currently provides a basic foundation with placeholder text and image generation.
+SynthMind is a multimodal chat application that combines a large language model (LLM) with a Stable Diffusion model. The interface is built with Gradio and styled like a chat application. The project currently provides a basic framework with placeholder implementations for text and image generation as well as image understanding.
 
 ## Features
 
 - Chat interface with tabs for Chat, Personas, App Settings, and Model Selection
 - Local LLM model listing from the `models/llm` directory
-- Placeholder Stable Diffusion calls
+- Image generation and image analysis modes in the chat window
+- Placeholder modules for the LLM, Stable Diffusion and vision model
 - Simple setup script to create a virtual environment and install dependencies
 
 ## Getting Started
