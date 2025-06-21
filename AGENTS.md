@@ -43,7 +43,20 @@ Chat Models: A list of commonly used LLMs (to be specified)
 
 Design
 The visual design is:
-
 Dark-themed
 Rounded UI elements
 Accent color: Orange
+
+Setup
+Planned OS support: Windows and Linux, each with its own dedicated installer.
+The installer automatically detects the host environment and chooses the optimal configuration path.
+Installation and runtime use a dedicated Python virtual environment (venv).
+
+Installer / setup script features
+Install	via git clone
+Update	via git pull
+Uninstall	- Removal routine in the setup script
+
+Default installation directories
+Linux: /opt/SynthMind
+Windows: user-selectable (installer prompts for location)
