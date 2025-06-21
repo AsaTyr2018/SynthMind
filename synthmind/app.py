@@ -39,7 +39,13 @@ def load_persona(name):
 def save_persona(name, background, character, d1, d2, d3):
     """Save persona data to a JSON file."""
     if not name:
-        return gr.update(), update_persona_list()
+        choices = list_personas()
+        return (
+            gr.update(choices=choices, value=None),
+            update_persona_list(),
+            gr.update(choices=choices, value=None),
+            None,
+        )
     data = {
         "name": name,
         "background": background,
