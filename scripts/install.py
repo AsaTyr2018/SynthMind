@@ -7,26 +7,39 @@ import subprocess
 import sys
 from pathlib import Path
 
-DEFAULT_REPO_URL = "https://github.com/yourusername/SynthMind.git"
+REPO_URL = "https://github.com/yourusername/SynthMind.git"
 DEFAULT_INSTALL_DIR_LINUX = Path("/opt/SynthMind")
-DEFAULT_INSTALL_DIR_WINDOWS = Path.home() / "SynthMind"
 
 
 def run(cmd, cwd=None):
-    """Run a shell command."""
     print(f"[RUN] {cmd}")
     subprocess.check_call(cmd, shell=True, cwd=cwd)
 
 
 def venv_bin(venv: Path, name: str) -> Path:
-    """Return the path to an executable inside the venv."""
     if platform.system() == "Windows":
         return venv / "Scripts" / name
     return venv / "bin" / name
 
 
-def create_venv(target_dir: Path):
-    venv_dir = target_dir / "venv"
+def ensure_dir(path: Path):
+    if not path.exists():
+        try:
+            path.mkdir(parents=True)
+        except PermissionError:
+            if platform.system() != "Windows":
+                run(f"sudo mkdir -p {path}")
+            else:
+                raise
+    if not os.access(path, os.W_OK):
+        if platform.system() != "Windows":
+            run(f"sudo chown -R {os.getuid()}:{os.getgid()} {path}")
+        else:
+            raise PermissionError(f"Write access to {path} denied")
+
+
+def create_venv(target: Path):
+    venv_dir = target / "venv"
     if not venv_dir.exists():
         run(f"{sys.executable} -m venv {venv_dir}")
     pip = venv_bin(venv_dir, "pip")
@@ -36,17 +49,18 @@ def create_venv(target_dir: Path):
 
 def get_default_dir() -> Path:
     if platform.system() == "Windows":
-        return DEFAULT_INSTALL_DIR_WINDOWS
+        dest = input("Installation directory [e.g. C:\\SynthMind]: ")
+        return Path(dest).expanduser()
     return DEFAULT_INSTALL_DIR_LINUX
 
 
 def install(args):
     target = Path(args.target or get_default_dir())
-    repo = args.repo or DEFAULT_REPO_URL
     if target.exists():
         print(f"Target directory {target} already exists")
         sys.exit(1)
-    run(f"git clone {repo} {target}")
+    ensure_dir(target.parent)
+    run(f"git clone {REPO_URL} {target}")
     create_venv(target)
     print("Installation complete.")
 
@@ -66,16 +80,17 @@ def uninstall(args):
     if not target.exists():
         print(f"Target directory {target} does not exist")
         return
-    print(f"Removing {target}")
-    shutil.rmtree(target)
+    if platform.system() != "Windows":
+        run(f"sudo rm -rf {target}")
+    else:
+        shutil.rmtree(target)
     print("Uninstall complete.")
 
 
-parser = argparse.ArgumentParser(description="Manage SynthMind installation")
+parser = argparse.ArgumentParser(description="Install or manage SynthMind")
 sub = parser.add_subparsers(dest="cmd", required=True)
 
 p_install = sub.add_parser("install", help="Install SynthMind")
-p_install.add_argument("--repo", help="Git repository URL")
 p_install.add_argument("--target", help="Installation directory")
 p_install.set_defaults(func=install)
 
