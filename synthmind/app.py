@@ -162,14 +162,14 @@ with gr.Blocks(theme=theme) as demo:
             maximum=1.5,
             value=0.7,
             label="temperature",
-            info="what does this settings do",
+            info="Randomness of the output; higher values increase variety",
         )
         gr.Slider(
             minimum=0,
             maximum=1,
             value=0.9,
             label="top_p",
-            info="what does this settings do",
+            info="Limits tokens to a cumulative probability mass",
         )
         gr.Slider(
             minimum=1,
@@ -177,7 +177,7 @@ with gr.Blocks(theme=theme) as demo:
             step=1,
             value=50,
             label="top_k",
-            info="what does this settings do",
+            info="Choose from the top k most likely tokens",
         )
         gr.Slider(
             minimum=1,
@@ -185,48 +185,48 @@ with gr.Blocks(theme=theme) as demo:
             step=1,
             value=256,
             label="max_tokens",
-            info="what does this settings do",
+            info="Maximum number of tokens to generate",
         )
         gr.Slider(
             minimum=0.5,
             maximum=2.0,
             value=1.1,
             label="repetition_penalty",
-            info="what does this settings do",
+            info="Penalty applied to repeated text",
         )
         gr.Slider(
             minimum=0,
             maximum=1,
             value=0.6,
             label="presence_penalty",
-            info="what does this settings do",
+            info="Discourages introducing topics already mentioned",
         )
         gr.Slider(
             minimum=0,
             maximum=1,
             value=0.5,
             label="frequency_penalty",
-            info="what does this settings do",
+            info="Reduces likelihood of frequent tokens",
         )
         gr.Textbox(
             value='["\n", "###"]',
             label="stop",
-            info="what does this settings do",
+            info="Stop generation when any of these sequences appear",
         )
         gr.Number(
             value=None,
             label="logprobs",
-            info="what does this settings do",
+            info="Return log probabilities for generated tokens",
         )
         gr.Checkbox(
             value=False,
             label="echo",
-            info="what does this settings do",
+            info="Include the prompt text in the output",
         )
         gr.Number(
             value=None,
             label="seed",
-            info="what does this settings do",
+            info="Random seed for reproducible results",
         )
     with gr.Tab("Model Selection"):
         gr.Markdown("## Model Selection")
