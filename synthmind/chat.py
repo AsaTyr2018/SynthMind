@@ -1,20 +1,30 @@
-"""Placeholder chat module for SynthMind."""
+"""Chat module for SynthMind.
+
+This module now loads language models on demand using the helpers in
+``synthmind.models``. Models are downloaded automatically the first time
+they are requested and cached in ``models/llm``.
+"""
 
 from typing import List, Tuple, Optional
 
+from .models import get_llm
 
-def generate_response(user_input: str, history: List[Tuple[str, str]] | None = None, model: Optional[str] = None) -> str:
-    """Return a simple placeholder response.
+DEFAULT_LLM = "distilgpt2"
 
-    Parameters
-    ----------
-    user_input: str
-        The user's text prompt.
-    history: list of tuples
-        Previous conversation history. Unused in this placeholder.
-    model: str | None
-        Name of the selected LLM model.
+
+def generate_response(
+    user_input: str,
+    history: List[Tuple[str, str]] | None = None,
+    model: Optional[str] = None,
+) -> str:
+    """Generate a response using the selected LLM.
+
+    The model is downloaded and loaded automatically on first use.
     """
-    # In a real implementation this function would invoke the selected
-    # language model. For now, just echo the input.
-    return f"Echo: {user_input}"
+
+    repo_id = model or DEFAULT_LLM
+    tokenizer, llm = get_llm(repo_id)
+
+    inputs = tokenizer(user_input, return_tensors="pt")
+    outputs = llm.generate(**inputs, max_new_tokens=50)
+    return tokenizer.decode(outputs[0], skip_special_tokens=True)

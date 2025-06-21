@@ -1,26 +1,20 @@
-"""Placeholder image generation module for SynthMind."""
+"""Image generation module for SynthMind.
 
-from PIL import Image, ImageDraw, ImageFont
+Stable Diffusion pipelines are automatically downloaded and cached in
+``models/sd`` using the helpers from :mod:`synthmind.models`.
+"""
+
+from PIL import Image
+
+from .models import get_image_generator
+
+DEFAULT_SD_MODEL = "runwayml/stable-diffusion-v1-5"
 
 
-def generate_image(prompt: str, size: int = 512) -> Image.Image:
-    """Return a simple placeholder image with the prompt text.
+def generate_image(prompt: str, size: int = 512, model: str | None = None) -> Image.Image:
+    """Generate an image from ``prompt`` using Stable Diffusion."""
 
-    Parameters
-    ----------
-    prompt: str
-        Text prompt for image generation.
-    size: int
-        Output image size in pixels (square).
-    """
-    # Create a blank image and draw the prompt text on it. This is just a
-    # stand-in for a Stable Diffusion call.
-    img = Image.new("RGB", (size, size), color="white")
-    draw = ImageDraw.Draw(img)
-    text = f"Generated:\n{prompt}"
-    try:
-        font = ImageFont.load_default()
-    except Exception:
-        font = None
-    draw.multiline_text((10, 10), text, fill="black", font=font)
-    return img
+    repo_id = model or DEFAULT_SD_MODEL
+    pipe = get_image_generator(repo_id)
+    image = pipe(prompt, height=size, width=size).images[0]
+    return image
